@@ -1,0 +1,353 @@
+{
+  "version": "35.0.0",
+  "artifacts": {
+    "devNitromy-app.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "devNitromy-app.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "devNitromy-app": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://043673801220/us-east-1",
+      "properties": {
+        "templateFile": "devNitromy-app.template.json",
+        "terminationProtection": false,
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::043673801220:role/cdk-hnb659fds-deploy-role-043673801220-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::043673801220:role/cdk-hnb659fds-cfn-exec-role-043673801220-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-043673801220-us-east-1/441b7b7f6ed6a83dfba7b3997a47e580d1d4444e53190587a212886ea7fc8584.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "devNitromy-app.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::043673801220:role/cdk-hnb659fds-lookup-role-043673801220-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "devNitromy-app.assets"
+      ],
+      "metadata": {
+        "/devNitromy-app/EncryptionKey/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EncryptionKey1B843E66"
+          }
+        ],
+        "/devNitromy-app/Secret_signing_key/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Secretsigningkey3D6A96BB"
+          }
+        ],
+        "/devNitromy-app/Migration_signing_key/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Migrationsigningkey22C324FA"
+          }
+        ],
+        "/devNitromy-app/MigrationKMSKeyID/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MigrationKMSKeyID387A0AA4"
+          }
+        ],
+        "/devNitromy-app/MigrationPreviousPCR0/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MigrationPreviousPCR0A7A2BABC"
+          }
+        ],
+        "/devNitromy-app/MigrationPreviousPCR0Attestation/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MigrationPreviousPCR0Attestation72B79727"
+          }
+        ],
+        "/devNitromy-app/MigrationOldKMSKeyID/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MigrationOldKMSKeyIDA6D9FAF9"
+          }
+        ],
+        "/devNitromy-app/VPC/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCB9E5F0B4"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet1Subnet325F50B2"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet1RouteTableF591E248"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet1RouteTableAssociationBFFA43B7"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet1/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet1DefaultRoute19059ECD"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet1/EIP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet1EIP2D50A06D"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet1/NATGateway": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet1NATGatewayEEDEB5A1"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet2Subnet2B2DFF71"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet2RouteTable55DAB1BB"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet2RouteTableAssociation0849466B"
+          }
+        ],
+        "/devNitromy-app/VPC/publicSubnet2/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCpublicSubnet2DefaultRoute9ED4D6BC"
+          }
+        ],
+        "/devNitromy-app/VPC/privateSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCprivateSubnet1SubnetE522290D"
+          }
+        ],
+        "/devNitromy-app/VPC/privateSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCprivateSubnet1RouteTable41566AF9"
+          }
+        ],
+        "/devNitromy-app/VPC/privateSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCprivateSubnet1RouteTableAssociation43FE0C59"
+          }
+        ],
+        "/devNitromy-app/VPC/privateSubnet1/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCprivateSubnet1DefaultRoute68B79172"
+          }
+        ],
+        "/devNitromy-app/VPC/privateSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCprivateSubnet2Subnet2F4D9530"
+          }
+        ],
+        "/devNitromy-app/VPC/privateSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCprivateSubnet2RouteTableBBE8BB2B"
+          }
+        ],
+        "/devNitromy-app/VPC/privateSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCprivateSubnet2RouteTableAssociation45BBC356"
+          }
+        ],
+        "/devNitromy-app/VPC/privateSubnet2/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCprivateSubnet2DefaultRouteD808B206"
+          }
+        ],
+        "/devNitromy-app/VPC/IGW": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCIGWB7E252D3"
+          }
+        ],
+        "/devNitromy-app/VPC/VPCGW": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VPCVPCGW99B986DC"
+          }
+        ],
+        "/devNitromy-app/KMSEndpoint/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KMSEndpointSecurityGroup3C14701E"
+          }
+        ],
+        "/devNitromy-app/KMSEndpoint/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KMSEndpoint25A5F270"
+          }
+        ],
+        "/devNitromy-app/SSMEndpoint/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SSMEndpointSecurityGroup3A3F1835"
+          }
+        ],
+        "/devNitromy-app/SSMEndpoint/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SSMEndpointE3B50236"
+          }
+        ],
+        "/devNitromy-app/ECREndpoint/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ECREndpointSecurityGroup68E91E62"
+          }
+        ],
+        "/devNitromy-app/ECREndpoint/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ECREndpoint0B0E50C8"
+          }
+        ],
+        "/devNitromy-app/NitroInstanceSG/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NitroInstanceSG51966EFB"
+          }
+        ],
+        "/devNitromy-app/SelfTCP443": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SelfTCP443"
+          }
+        ],
+        "/devNitromy-app/SelfICMP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SelfICMP"
+          }
+        ],
+        "/devNitromy-app/InstanceSSM/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "InstanceSSMCBFA3CF0"
+          }
+        ],
+        "/devNitromy-app/InstanceSSM/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "InstanceSSMDefaultPolicy6E4EFE93"
+          }
+        ],
+        "/devNitromy-app/NitroInstance/InstanceProfile": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NitroInstanceInstanceProfileBCA9906C"
+          }
+        ],
+        "/devNitromy-app/NitroInstance/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NitroInstance979691AE"
+          }
+        ],
+        "/devNitromy-app/SsmParameterValue:--aws--service--ami-amazon-linux-latest--al2023-ami-kernel-6.1-x86_64:C96584B6-F00A-464E-AD19-53AFF4B05118.Parameter": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61x8664C96584B6F00A464EAD1953AFF4B05118Parameter"
+          }
+        ],
+        "/devNitromy-app/EnclaveEIP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EnclaveEIP"
+          }
+        ],
+        "/devNitromy-app/EnclaveEIPAssoc": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EnclaveEIPAssoc"
+          }
+        ],
+        "/devNitromy-app/KMSKeyID/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KMSKeyID6CC84007"
+          }
+        ],
+        "/devNitromy-app/EC2 Instance Role ARN": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EC2InstanceRoleARN"
+          }
+        ],
+        "/devNitromy-app/KMS Key ID": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KMSKeyID"
+          }
+        ],
+        "/devNitromy-app/Instance ID": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "InstanceID"
+          }
+        ],
+        "/devNitromy-app/Elastic IP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ElasticIP"
+          }
+        ],
+        "/devNitromy-app/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/devNitromy-app/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "devNitromy-app"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}

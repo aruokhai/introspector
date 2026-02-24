@@ -1,0 +1,48 @@
+# Enclave configuration
+# Edit this file then run: enclave init
+
+name: my-app                     # App name (used in stack name, EIF name)
+version: dev                     # Build version (baked into binary via ldflags)
+region: us-east-1                # AWS region
+account: "043673801220"                      # AWS account ID (required)
+prefix: dev                      # Deployment prefix (stack = {prefix}Nitro{Name})
+instance_type: m6i.xlarge        # EC2 instance type
+nix_image: nixos/nix:2.24.9      # Docker image for reproducible builds
+
+# SDK coordinates for the enclave supervisor binary.
+# The supervisor handles attestation, secrets, PCR extension, and signing
+# middleware automatically. Your app is a plain HTTP server with zero SDK imports.
+sdk:
+  rev: "v0.0.16"
+  hash: "sha256-nFKHsexPNPYYyLGyoiZXcu5u9Ut6A3P/61FFDTwqFMg="
+  vendor_hash: "sha256-4uDkFBHHyfzvkWug69aIbAPGlzh2JDngz+l2ngkpSd0="
+
+app:
+  source: nix                    # "nix" = fetch from GitHub via Nix
+
+  # GitHub coordinates for the app to run inside the enclave.
+  # Your app is a normal Go HTTP server that listens on ENCLAVE_APP_PORT (default 7074).
+  # Secrets are passed as environment variables. No SDK imports needed.
+  nix_owner: "aruokhai"                  # GitHub owner (required)
+  nix_repo: "introspector"                   # GitHub repo name (required)
+  nix_rev: "ae466837c0d0083da4216228ea98f80b0e80a5ac"                    # Git commit SHA (required)
+  nix_hash: "sha256-CKltDSbnThqv2kuNN/sI85jN1AZsHEtRXxnYTq/Wq4o="                   # Nix source hash: nix-prefetch-url --unpack (required)
+  nix_vendor_hash: "sha256-w7Ih56HsQ9ZIlDqoyH3QHNyyGkS7VGrdP6FrE65V+jg="            # Go vendor hash (required)
+  nix_sub_packages:              # Go sub-packages to build
+    - "cmd"
+  binary_name: introspector                # Output binary name (defaults to 'name')
+
+  # Environment variables baked into the EIF.
+  # Template vars: {{region}}, {{prefix}}, {{version}}
+  env:
+    INTROSPECTOR_PORT: "7074"
+    INTROSPECTOR_NO_TLS: "true"
+    INTROSPECTOR_DATADIR: "/app/data"
+
+# Secrets managed by KMS inside the enclave.
+# Each secret is generated as 32 random bytes, encrypted with KMS,
+# stored in SSM, and decrypted at boot via attestation.
+# The decrypted value (hex-encoded) is set as the specified env var.
+secrets:
+  - name: signing_key
+    env_var: INTROSPECTOR_SECRET_KEY

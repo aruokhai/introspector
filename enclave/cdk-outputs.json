@@ -1,0 +1,8 @@
+{
+  "devNitromy-app": {
+    "ElasticIP": "52.55.58.221",
+    "KMSKeyID": "5dedc42b-38c2-4c8e-9ae0-275b1efbf1f0",
+    "EC2InstanceRoleARN": "arn:aws:iam::043673801220:role/devNitromy-app-InstanceSSMCBFA3CF0-lGfAwYz16jFH",
+    "InstanceID": "i-08aab133df67fa303"
+  }
+}
