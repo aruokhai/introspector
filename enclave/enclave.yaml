@@ -2,9 +2,9 @@
 # Edit this file then run: enclave init
 
 name: my-app                     # App name (used in stack name, EIF name)
-version: dev                     # Build version (baked into binary via ldflags)
+version: v0.0.2                     # Build version (baked into binary via ldflags)
 region: us-east-1                # AWS region
-account: "043673801220"                      # AWS account ID (required)
+account: ""                      # AWS account ID (required)
 prefix: dev                      # Deployment prefix (stack = {prefix}Nitro{Name})
 instance_type: m6i.xlarge        # EC2 instance type
 nix_image: nixos/nix:2.24.9      # Docker image for reproducible builds
@@ -13,8 +13,8 @@ nix_image: nixos/nix:2.24.9      # Docker image for reproducible builds
 # The supervisor handles attestation, secrets, PCR extension, and signing
 # middleware automatically. Your app is a plain HTTP server with zero SDK imports.
 sdk:
-  rev: "v0.0.16"
-  hash: "sha256-nFKHsexPNPYYyLGyoiZXcu5u9Ut6A3P/61FFDTwqFMg="
+  rev: "v0.0.17"
+  hash: "sha256-ufxbc/14GvHIDjLyRQRO4if7OUj1/4mNa7xh9L9uy0Q="
   vendor_hash: "sha256-4uDkFBHHyfzvkWug69aIbAPGlzh2JDngz+l2ngkpSd0="
 
 app:
@@ -25,8 +25,8 @@ app:
   # Secrets are passed as environment variables. No SDK imports needed.
   nix_owner: "aruokhai"                  # GitHub owner (required)
   nix_repo: "introspector"                   # GitHub repo name (required)
-  nix_rev: "ae466837c0d0083da4216228ea98f80b0e80a5ac"                    # Git commit SHA (required)
-  nix_hash: "sha256-CKltDSbnThqv2kuNN/sI85jN1AZsHEtRXxnYTq/Wq4o="                   # Nix source hash: nix-prefetch-url --unpack (required)
+  nix_rev: "578045cf071357a79a6aa3d0b8baedb5a8b40599"                    # Git commit SHA (required)
+  nix_hash: "sha256-Ffx+WZBxuQiXFr6Xn/eraneiTke2FrwiYrD6MaRv+IY="                   # Nix source hash: nix-prefetch-url --unpack (required)
   nix_vendor_hash: "sha256-w7Ih56HsQ9ZIlDqoyH3QHNyyGkS7VGrdP6FrE65V+jg="            # Go vendor hash (required)
   nix_sub_packages:              # Go sub-packages to build
     - "cmd"

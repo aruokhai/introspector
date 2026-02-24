@@ -1,3 +1,4 @@
+# Build artifacts (EIF image + PCR measurements)
 artifacts/
 
 # Generated build config (from enclave.yaml for Nix)
