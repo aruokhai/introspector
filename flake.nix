@@ -17,7 +17,7 @@
         # BUILD_CONFIG_PATH is set by the CLI; defaults to /src/build-config.json (Docker).
         # Requires --impure flag (already set by the CLI).
         configPath = let p = builtins.getEnv "BUILD_CONFIG_PATH"; in
-          if p != "" then p else "/src/build-config.json";
+          if p != "" then p else "/src/enclave/build-config.json";
         buildCfg = builtins.fromJSON (builtins.readFile configPath);
         appCfg = buildCfg.app;
         sdkCfg = buildCfg.sdk;
