@@ -1,0 +1,10 @@
+{
+  "status": "fail",
+  "pcr0": "a70ed225193f64d8cd5f90e70a119152c57aba9c08d39f56a70d4aa4e05e64b027da5003aad2095f4bcc621f8314072f",
+  "pcr1": "f620faebea2b9ac731aca5339da7a16b36260a779e850d7c6a616fe0e08d119177e8ce3a8b9ff19873be021a69529627",
+  "pcr2": "1c8b3705a649d8ad1e2ae882a8fac6d2c96046f4e8f9ce7a0b9b8d28f1d6a62be7bf000de5124f1a2ce76e62408bd810",
+  "output": "[verify] Verifying https://52.55.58.221\nError: verification failed: PCR0 mismatch: expected a70ed225193f64d8cd5f90e70a119152c57aba9c08d39f56a70d4aa4e05e64b027da5003aad2095f4bcc621f8314072f, got 276a056db3bacf1181f665a6537bad7bc473be2f1267329dcfec79c1b2e2daab3f4d07623ec2cf330605abec701b3e58\nUsage:\n  enclave verify [flags]\n\nFlags:\n      --base-url string          Enclave base URL (overrides CDK outputs)\n      --expected-pcr0 string     Expected PCR0 hex (overrides auto-detection)\n  -h, --help                     help for verify\n      --strict-tls               Require CA-signed TLS certificate\n      --verify-attestation-key   Verify attestation key via UserData appKeyHash and test response signature (default true)\n      --verify-build             Rebuild EIF locally and compare PCR0\n      --wait int                 Wait up to N seconds for enclave to become reachable (0 = no retry)\n\nverification failed: PCR0 mismatch: expected a70ed225193f64d8cd5f90e70a119152c57aba9c08d39f56a70d4aa4e05e64b027da5003aad2095f4bcc621f8314072f, got 276a056db3bacf1181f665a6537bad7bc473be2f1267329dcfec79c1b2e2daab3f4d07623ec2cf330605abec701b3e58",
+  "timestamp": "2026-02-24T14:08:24Z",
+  "commit": "578045cf071357a79a6aa3d0b8baedb5a8b40599",
+  "repo": "aruokhai/introspector"
+}
