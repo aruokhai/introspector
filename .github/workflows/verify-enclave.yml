@@ -22,6 +22,9 @@ jobs:
       - name: Install enclave CLI
         run: go install github.com/ArkLabsHQ/introspector-enclave/cmd/enclave@latest
 
+      - name: Pull Nix Docker image
+        run: docker pull nixos/nix:2.24.9
+
       - name: Build EIF (reproducible)
         run: enclave build
 
