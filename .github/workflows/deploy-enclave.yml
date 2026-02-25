@@ -33,11 +33,14 @@ jobs:
       - name: Install AWS CDK
         run: npm install -g aws-cdk
 
+      # The enclave CLI doesn't auto-pull the Docker image before creating the container.
       - name: Pull Nix Docker image
         run: docker pull nixos/nix:2.24.9
 
       - name: Build and deploy
         run: |
+          # Derive the AWS account ID from the OIDC role credentials and inject
+          # it into enclave.yaml (kept empty in git to avoid leaking account info).
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           sed -i "s/^account: .*/account: \"${ACCOUNT_ID}\"/" enclave/enclave.yaml
           enclave build
