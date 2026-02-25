@@ -40,6 +40,5 @@ jobs:
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           sed -i "s/^account: .*/account: \"${ACCOUNT_ID}\"/" enclave/enclave.yaml
-          cdk bootstrap aws://${ACCOUNT_ID}/${{ vars.AWS_REGION }}
           enclave build
           enclave deploy
