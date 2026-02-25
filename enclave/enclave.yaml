@@ -2,7 +2,7 @@
 # Edit this file then run: enclave init
 
 name: my-app                     # App name (used in stack name, EIF name)
-version: v0.0.2                     # Build version (baked into binary via ldflags)
+version: dev                     # Build version (baked into binary via ldflags)
 region: us-east-1                # AWS region
 account: ""                      # AWS account ID (required)
 prefix: dev                      # Deployment prefix (stack = {prefix}Nitro{Name})
@@ -13,8 +13,8 @@ nix_image: nixos/nix:2.24.9      # Docker image for reproducible builds
 # The supervisor handles attestation, secrets, PCR extension, and signing
 # middleware automatically. Your app is a plain HTTP server with zero SDK imports.
 sdk:
-  rev: "v0.0.17"
-  hash: "sha256-ufxbc/14GvHIDjLyRQRO4if7OUj1/4mNa7xh9L9uy0Q="
+  rev: "v0.0.18"
+  hash: "sha256-X0Lp1M+S686lSK7/NX9O9F54Kf9lIjv7mfD2jXoS5sU="
   vendor_hash: "sha256-4uDkFBHHyfzvkWug69aIbAPGlzh2JDngz+l2ngkpSd0="
 
 app:
@@ -25,8 +25,8 @@ app:
   # Secrets are passed as environment variables. No SDK imports needed.
   nix_owner: "aruokhai"                  # GitHub owner (required)
   nix_repo: "introspector"                   # GitHub repo name (required)
-  nix_rev: "578045cf071357a79a6aa3d0b8baedb5a8b40599"                    # Git commit SHA (required)
-  nix_hash: "sha256-Ffx+WZBxuQiXFr6Xn/eraneiTke2FrwiYrD6MaRv+IY="                   # Nix source hash: nix-prefetch-url --unpack (required)
+  nix_rev: "72c91b89c9000ec6fc6ce8ba38e0c29b33c0254c"                    # Git commit SHA (required)
+  nix_hash: "sha256-tHqRm+QtLFUglTnlnFwNefPKqwM8GP4AZ4pnnZDqWPM="                   # Nix source hash: nix-prefetch-url --unpack (required)
   nix_vendor_hash: "sha256-w7Ih56HsQ9ZIlDqoyH3QHNyyGkS7VGrdP6FrE65V+jg="            # Go vendor hash (required)
   nix_sub_packages:              # Go sub-packages to build
     - "cmd"
