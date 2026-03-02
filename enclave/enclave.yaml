@@ -30,14 +30,15 @@ app:
   nix_hash: "sha256-igeHdw+tdHO62oFvBVuN36uPi1MGbNPUMNdedJZmo1w="                   # Nix source hash: nix-prefetch-url --unpack (required)
   nix_vendor_hash: "sha256-w7Ih56HsQ9ZIlDqoyH3QHNyyGkS7VGrdP6FrE65V+jg="            # Go vendor hash (required)
   nix_sub_packages:              # Go sub-packages to build
-    - "."
-  binary_name: ""                # Output binary name (defaults to 'name')
+    - "cmd"
+  binary_name: introspector                # Output binary name (defaults to 'name')
 
   # Environment variables baked into the EIF.
   # Template vars: {{region}}, {{prefix}}, {{version}}
   env:
-    # MY_APP_DATA_DIR: /app/data
-    # MY_APP_REGION: "{{region}}"
+    INTROSPECTOR_PORT: "7074"
+    INTROSPECTOR_NO_TLS: "true"
+    INTROSPECTOR_DATADIR: "/app/data"
 
 # Secrets managed by KMS inside the enclave.
 # Each secret is generated as 32 random bytes, encrypted with KMS,
@@ -45,6 +46,4 @@ app:
 # The decrypted value (hex-encoded) is set as the specified env var.
 secrets:
   - name: signing_key
-    env_var: APP_SIGNING_KEY
-  # - name: api_token
-  #   env_var: APP_API_TOKEN
+    env_var: INTROSPECTOR_SECRET_KEY
