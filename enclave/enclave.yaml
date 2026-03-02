@@ -24,11 +24,11 @@ app:
   # GitHub coordinates for the app to run inside the enclave.
   # Your app is a plain HTTP server that listens on ENCLAVE_APP_PORT (default 7074).
   # Secrets are passed as environment variables. No SDK imports needed.
-  nix_owner: ""                  # GitHub owner (required)
-  nix_repo: ""                   # GitHub repo name (required)
-  nix_rev: ""                    # Git commit SHA (required)
-  nix_hash: ""                   # Nix source hash: nix-prefetch-url --unpack (required)
-  nix_vendor_hash: ""            # Go vendor hash (required)
+  nix_owner: "aruokhai"                  # GitHub owner (required)
+  nix_repo: "introspector"                   # GitHub repo name (required)
+  nix_rev: "b87d9e8ff2e1be7f3e69bb7d644a0f5864ab6371"                    # Git commit SHA (required)
+  nix_hash: "sha256-wD92leXyipVchrEe2KNK+amCk4ZzvHxfJwFGz2Shjys="                   # Nix source hash: nix-prefetch-url --unpack (required)
+  nix_vendor_hash: "sha256-w7Ih56HsQ9ZIlDqoyH3QHNyyGkS7VGrdP6FrE65V+jg="            # Go vendor hash (required)
   nix_sub_packages:              # Go sub-packages to build
     - "cmd"
   binary_name: introspector                # Output binary name (defaults to 'name')
