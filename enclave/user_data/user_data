@@ -78,6 +78,12 @@ aws s3 cp ${__ENCLAVE_INIT_SYSTEMD_S3_URL__} /etc/systemd/system/enclave-watchdo
 aws s3 cp ${__IMDS_SYSTEMD_S3_URL__} /etc/systemd/system/enclave-imds-proxy.service
 aws s3 cp ${__GVPROXY_SYSTEMD_S3_URL__} /etc/systemd/system/gvproxy.service
 
+# Download management server binary and systemd unit
+aws s3 cp ${__MGMT_BINARY_S3_URL__} /home/ec2-user/app/enclave-mgmt
+chmod +x /home/ec2-user/app/enclave-mgmt
+chown ec2-user:ec2-user /home/ec2-user/app/enclave-mgmt
+aws s3 cp ${__MGMT_SYSTEMD_S3_URL__} /etc/systemd/system/enclave-mgmt.service
+
 cat <<EOF >> /etc/environment
 ENCLAVE_APP_NAME=${__APP_NAME__}
 EIF_PATH=/home/ec2-user/app/server/enclave.eif
@@ -91,4 +97,5 @@ EOF
 systemctl enable --now enclave-watchdog.service
 systemctl enable --now enclave-imds-proxy.service
 systemctl enable --now gvproxy.service
+systemctl enable --now enclave-mgmt.service
 --//--
