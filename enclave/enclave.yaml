@@ -13,8 +13,8 @@ nix_image: nixos/nix:2.24.9      # Docker image for reproducible builds
 # The supervisor handles attestation, secrets, PCR extension, and signing
 # middleware automatically. Your app is a plain HTTP server with zero SDK imports.
 sdk:
-  rev: "v0.0.30"
-  hash: "sha256-M7r1uxaYynY7ACdFmVYppL40eqFrhRq0W5Us4nH1Xg0="
+  rev: "v0.0.32"
+  hash: "sha256-YcqJnUa+mVVuQTMeSfaI6Z4cT50uT0fHYBiGpQHIlek="
   vendor_hash: "sha256-4uDkFBHHyfzvkWug69aIbAPGlzh2JDngz+l2ngkpSd0="
 
 app:
@@ -26,8 +26,8 @@ app:
   # Secrets are passed as environment variables. No SDK imports needed.
   nix_owner: "aruokhai"                  # GitHub owner (required)
   nix_repo: "introspector"                   # GitHub repo name (required)
-  nix_rev: "b87d9e8ff2e1be7f3e69bb7d644a0f5864ab6371"                    # Git commit SHA (required)
-  nix_hash: "sha256-wD92leXyipVchrEe2KNK+amCk4ZzvHxfJwFGz2Shjys="                   # Nix source hash: nix-prefetch-url --unpack (required)
+  nix_rev: "d60d28c12a3e888da2b7e37471506c8a387d2cc0"                    # Git commit SHA (required)
+  nix_hash: "sha256-jJyAUv0xnCKzwtzkKdXqBCGcdJ4sdfBl4gyeTZ3uyh8="                   # Nix source hash: nix-prefetch-url --unpack (required)
   nix_vendor_hash: "sha256-w7Ih56HsQ9ZIlDqoyH3QHNyyGkS7VGrdP6FrE65V+jg="            # Go vendor hash (required)
   nix_sub_packages:              # Go sub-packages to build
     - "cmd"
