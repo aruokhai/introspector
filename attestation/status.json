@@ -1,10 +1,10 @@
 {
   "status": "pass",
-  "pcr0": "0a136510d5686ea6e5ca473d7851a6b5c7e275ba3fa5c271a89d4c42707c556eb754be639b4a6be50a9986a0b57d0bef",
+  "pcr0": "3d7cdf34d4a190e828e24df7c28a610dc28c8c085d24d930e08fb5c8bda7c6a6001c81e08cf40d51c1818510c7cebc85",
   "pcr1": "f620faebea2b9ac731aca5339da7a16b36260a779e850d7c6a616fe0e08d119177e8ce3a8b9ff19873be021a69529627",
-  "pcr2": "c30e66e5656048fea216966e17ffb8f1ecee6ee6934b94ddf67be98072132d615ac4c527dbaa80ac48d3c07dbb4cd872",
-  "output": "[verify] Verifying https://23.23.181.9\n[verify] Attestation document verified.\n[verify] Attestation key binding verified via appKeyHash: 02673fe08310fb650e7f5933066ee888788ecb9c00cbd319a13b7d984c7cfa9474\n[verify] Response signature verified (X-Attestation-Signature valid).\n[verify] PCR0 chain: genesis (first deployment)\n[verify] All checks passed.",
-  "timestamp": "2026-03-04T11:39:36Z",
-  "commit": "307ff74550e1bd7034a990e39228daecf953bb54",
+  "pcr2": "f0455a5599e7fe4074642336efb91f6933b259f9f14d889b743e758ca9f1bcf5a44f321ec131dc7dfa72c1ce8f435edd",
+  "output": "[verify] Verifying https://23.23.25.100\n[verify] Attestation document verified.\n[verify] Attestation key binding verified via appKeyHash: 0240f42743cdca2ac8b05e2fd631a8d614eee62d6074a3ec38ce09cec25f175770\n[verify] Response signature verified (X-Attestation-Signature valid).\n[verify] PCR0 chain: genesis (first deployment)\n[verify] All checks passed.",
+  "timestamp": "2026-03-04T13:05:49Z",
+  "commit": "5f8e803552fc4b6725b9bd3138cee26e8319edc7",
   "repo": "aruokhai/introspector"
 }
