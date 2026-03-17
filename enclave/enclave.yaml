@@ -2,7 +2,7 @@
 # Edit this file then run: enclave init
 
 name: my-app                     # App name (used in stack name, EIF name)
-version: dev                     # Build version (baked into binary via ldflags)
+version: 0.0.1                   # Build version (semver, baked into binary via ldflags)
 region: us-east-1                # AWS region
 account: ""                      # AWS account ID (required)
 prefix: dev                      # Deployment prefix (stack = {prefix}Nitro{Name})
@@ -13,9 +13,9 @@ nix_image: nixos/nix:2.24.9      # Docker image for reproducible builds
 # The supervisor handles attestation, secrets, PCR extension, and signing
 # middleware automatically. Your app is a plain HTTP server with zero SDK imports.
 sdk:
-  rev: "v0.0.36"
-  hash: "sha256-swSJfqXdpbgz/oS+aZVyi5BEKhHrdYhO25DX21aZd40="
-  vendor_hash: "sha256-4uDkFBHHyfzvkWug69aIbAPGlzh2JDngz+l2ngkpSd0="
+  rev: "v0.0.50"
+  hash: "sha256-U9Gfre4eZSMNSEel4Gv1d8zXq5nsqhJ7/D8czBGVBnA="
+  vendor_hash: "sha256-pn7BpRe6csX8LnK5NEGXktC+RkoaKg/ZZpJ6SLcP1dE="
 
 app:
   language: "go"                 # App language: go, nodejs
