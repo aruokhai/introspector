@@ -20,6 +20,7 @@ services:
   # Downloads the latest EIF from GitHub Releases before the enclave starts.
   eif-downloader:
     image: curlimages/curl:latest
+    user: "0:0"
     volumes:
       - eif-artifacts:/artifacts
     environment:
