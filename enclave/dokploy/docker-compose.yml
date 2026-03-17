@@ -150,5 +150,22 @@ services:
     command: ["boot-qemu.sh", "/eif/image.eif"]
     restart: unless-stopped
 
+  # --- Reverse Proxy ---
+  # Exposes the enclave app (host port 7074) to Dokploy's Traefik.
+  # Needed because the enclave service uses network_mode:host,
+  # which Traefik can't route to directly.
+  # In Dokploy: add a domain on this service, container port 80.
+  web:
+    image: nginx:alpine
+    ports:
+      - "7075:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - enclave
+    restart: unless-stopped
+
 volumes:
   eif-artifacts:
