@@ -130,10 +130,11 @@ services:
   enclave:
     image: ghcr.io/arklabshq/enclave-runner:latest
     privileged: true
-    network_mode: host
     devices:
       - /dev/kvm:/dev/kvm
       - /dev/vsock:/dev/vsock
+    ports:
+      - "7074:7074"
     volumes:
       - eif-artifacts:/eif
     depends_on:
@@ -161,8 +162,6 @@ services:
       - "7075:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       - enclave
     restart: unless-stopped
