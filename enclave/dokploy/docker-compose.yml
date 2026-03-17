@@ -134,7 +134,7 @@ services:
       - /dev/kvm:/dev/kvm
       - /dev/vsock:/dev/vsock
     ports:
-      - "7074:7074"
+      - "8443:8443"
     volumes:
       - eif-artifacts:/eif
     depends_on:
@@ -152,9 +152,7 @@ services:
     restart: unless-stopped
 
   # --- Reverse Proxy ---
-  # Exposes the enclave app (host port 7074) to Dokploy's Traefik.
-  # Needed because the enclave service uses network_mode:host,
-  # which Traefik can't route to directly.
+  # Exposes the enclave app (HTTPS on 8443) to Dokploy's Traefik.
   # In Dokploy: add a domain on this service, container port 80.
   web:
     image: nginx:alpine
