@@ -46,6 +46,9 @@ app:
     AWS_ENDPOINT_URL_S3: "http://localstack:4566"
     AWS_ACCESS_KEY_ID: "test"
     AWS_SECRET_ACCESS_KEY: "test"
+    MOCK_IMDS_HOST: "mock-imds"
+    BOOT_TIMEOUT: "120"
+
 
 # Secrets managed by KMS inside the enclave.
 # Each secret is generated as 32 random bytes, encrypted with KMS,
