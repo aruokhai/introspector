@@ -39,6 +39,13 @@ app:
     INTROSPECTOR_PORT: "7074"
     INTROSPECTOR_NO_TLS: "true"
     INTROSPECTOR_DATADIR: "/app/data"
+    AWS_ENDPOINT_URL_KMS: "http://local-kms:4000"
+    ENCLAVE_KMS_KEY_ID: "arn:aws:kms:us-east-1:123456789012:key/test-key-id"
+    AWS_ENDPOINT_URL_SSM: "http://localstack:4566"
+    AWS_ENDPOINT_URL_STS: "http://localstack:4566"
+    AWS_ENDPOINT_URL_S3: "http://localstack:4566"
+    AWS_ACCESS_KEY_ID: "test"
+    AWS_SECRET_ACCESS_KEY: "test"
 
 # Secrets managed by KMS inside the enclave.
 # Each secret is generated as 32 random bytes, encrypted with KMS,
