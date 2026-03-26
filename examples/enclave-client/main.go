@@ -3,12 +3,18 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
+	"time"
+
+	"crypto/sha256"
 
 	"github.com/ArkLabsHQ/introspector-enclave/client"
 	"github.com/ArkLabsHQ/introspector/pkg/arkade"
@@ -41,6 +47,7 @@ func main() {
 	manifestURL := flag.String("manifest", defaultManifestURL, "deployment manifest URL")
 	baseURL := flag.String("url", "", "override base URL (skips manifest, requires -pcr0)")
 	pcr0 := flag.String("pcr0", "", "expected PCR0 hex (used with -url)")
+	insecure := flag.Bool("insecure", false, "skip attestation/PCR0 verification (use plain HTTPS)")
 	flag.Parse()
 
 	if flag.NArg() < 1 {
@@ -49,6 +56,31 @@ func main() {
 	}
 
 	ctx := context.Background()
+
+	if *insecure {
+		if *baseURL == "" {
+			fmt.Fprintf(os.Stderr, "error: -url is required when using -insecure\n")
+			os.Exit(1)
+		}
+		fmt.Println("WARNING: skipping attestation verification (insecure mode)")
+		ic := newInsecureClient(*baseURL)
+		switch flag.Arg(0) {
+		case "info":
+			if err := cmdInfoInsecure(ctx, ic); err != nil {
+				fmt.Fprintf(os.Stderr, "error: %v\n", err)
+				os.Exit(1)
+			}
+		case "submit-tx":
+			if err := cmdSubmitTxInsecure(ctx, ic, flag.Args()[1:]); err != nil {
+				fmt.Fprintf(os.Stderr, "error: %v\n", err)
+				os.Exit(1)
+			}
+		default:
+			fmt.Fprintf(os.Stderr, "unknown command: %s\n", flag.Arg(0))
+			os.Exit(1)
+		}
+		return
+	}
 
 	c, err := createClient(ctx, *manifestURL, *baseURL, *pcr0)
 	if err != nil {
@@ -357,6 +389,230 @@ func cmdSubmitTx(ctx context.Context, c *client.Client, args []string) error {
 		SignedCheckpointTxs []string `json:"signed_checkpoint_txs"`
 	}
 	if err := json.Unmarshal(resp.Body, &result); err != nil {
+		return nil
+	}
+
+	if result.SignedArkTx != "" {
+		fmt.Printf("Signed Ark Tx:      %s\n", result.SignedArkTx)
+	}
+	for i, cp := range result.SignedCheckpointTxs {
+		fmt.Printf("Signed Checkpoint %d: %s\n", i, cp)
+	}
+	return nil
+}
+
+// insecureClient makes plain HTTPS requests without attestation verification
+// but still verifies X-Attestation-Signature Schnorr signatures on responses.
+type insecureClient struct {
+	baseURL    string
+	httpClient *http.Client
+}
+
+func newInsecureClient(baseURL string) *insecureClient {
+	return &insecureClient{
+		baseURL: strings.TrimRight(baseURL, "/"),
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		},
+	}
+}
+
+// verifySignature checks the X-Attestation-Signature header against the
+// X-Attestation-Pubkey header. Returns whether verification succeeded.
+func verifySignature(resp *http.Response, body []byte) (bool, error) {
+	sigHex := resp.Header.Get("X-Attestation-Signature")
+	pubkeyHex := resp.Header.Get("X-Attestation-Pubkey")
+
+	if sigHex == "" || pubkeyHex == "" {
+		return false, nil
+	}
+
+	pubkeyBytes, err := hex.DecodeString(pubkeyHex)
+	if err != nil {
+		return false, fmt.Errorf("decode pubkey: %w", err)
+	}
+	// Compressed pubkey (33 bytes) → x-only (32 bytes) for Schnorr.
+	if len(pubkeyBytes) == 33 {
+		pubkeyBytes = pubkeyBytes[1:]
+	}
+	pubkey, err := schnorr.ParsePubKey(pubkeyBytes)
+	if err != nil {
+		return false, fmt.Errorf("parse pubkey: %w", err)
+	}
+
+	sigBytes, err := hex.DecodeString(sigHex)
+	if err != nil {
+		return false, fmt.Errorf("decode signature: %w", err)
+	}
+	sig, err := schnorr.ParseSignature(sigBytes)
+	if err != nil {
+		return false, fmt.Errorf("parse signature: %w", err)
+	}
+
+	msgHash := sha256.Sum256(body)
+	return sig.Verify(msgHash[:], pubkey), nil
+}
+
+func (ic *insecureClient) get(ctx context.Context, path string) (int, []byte, bool, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ic.baseURL+path, nil)
+	if err != nil {
+		return 0, nil, false, err
+	}
+	resp, err := ic.httpClient.Do(req)
+	if err != nil {
+		return 0, nil, false, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, false, err
+	}
+	verified, verr := verifySignature(resp, body)
+	if verr != nil {
+		fmt.Fprintf(os.Stderr, "  signature check error: %v\n", verr)
+	}
+	return resp.StatusCode, body, verified, nil
+}
+
+func (ic *insecureClient) post(ctx context.Context, path string, body io.Reader) (int, []byte, bool, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, ic.baseURL+path, body)
+	if err != nil {
+		return 0, nil, false, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := ic.httpClient.Do(req)
+	if err != nil {
+		return 0, nil, false, err
+	}
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, false, err
+	}
+	verified, verr := verifySignature(resp, respBody)
+	if verr != nil {
+		fmt.Fprintf(os.Stderr, "  signature check error: %v\n", verr)
+	}
+	return resp.StatusCode, respBody, verified, nil
+}
+
+func cmdInfoInsecure(ctx context.Context, ic *insecureClient) error {
+	fmt.Println("Calling GET /v1/info (insecure) ...")
+	status, body, sigOK, err := ic.get(ctx, "/v1/info")
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("\nStatus:             %d\n", status)
+	fmt.Printf("Signature Verified: %v\n", sigOK)
+
+	var info struct {
+		Version      string `json:"version"`
+		SignerPubkey string `json:"signerPubkey"`
+	}
+	if err := json.Unmarshal(body, &info); err != nil {
+		fmt.Printf("Raw body: %s\n", body)
+		return nil
+	}
+
+	fmt.Printf("Version:            %s\n", info.Version)
+	fmt.Printf("Signer Pubkey:      %s\n", info.SignerPubkey)
+	return nil
+}
+
+func getSignerPubkeyInsecure(ctx context.Context, ic *insecureClient) (*btcec.PublicKey, error) {
+	_, body, _, err := ic.get(ctx, "/v1/info")
+	if err != nil {
+		return nil, fmt.Errorf("get info: %w", err)
+	}
+
+	var info struct {
+		SignerPubkey string `json:"signerPubkey"`
+	}
+	if err := json.Unmarshal(body, &info); err != nil {
+		return nil, fmt.Errorf("parse info: %w", err)
+	}
+
+	pubkeyBytes, err := hex.DecodeString(info.SignerPubkey)
+	if err != nil {
+		return nil, fmt.Errorf("decode signer pubkey hex: %w", err)
+	}
+
+	pubkey, err := btcec.ParsePubKey(pubkeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("parse signer pubkey: %w", err)
+	}
+
+	return pubkey, nil
+}
+
+func cmdSubmitTxInsecure(ctx context.Context, ic *insecureClient, args []string) error {
+	fs := flag.NewFlagSet("submit-tx", flag.ExitOnError)
+	tx := fs.String("tx", "", "base64-encoded Ark transaction (PSBT)")
+	checkpoints := fs.String("checkpoints", "", "comma-separated base64-encoded checkpoint PSBTs")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
+	var arkTxB64 string
+	var cpList []string
+
+	if *tx == "" {
+		fmt.Println("Fetching introspector signer pubkey ...")
+		signerPubkey, err := getSignerPubkeyInsecure(ctx, ic)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Signer pubkey:      %s\n\n", hex.EncodeToString(signerPubkey.SerializeCompressed()))
+
+		fmt.Println("Building example ark transaction ...")
+		arkTxB64, cpList, err = buildExampleTx(signerPubkey)
+		if err != nil {
+			return fmt.Errorf("build example tx: %w", err)
+		}
+		fmt.Println()
+	} else {
+		arkTxB64 = *tx
+		if *checkpoints != "" {
+			cpList = strings.Split(*checkpoints, ",")
+		}
+	}
+
+	payload := struct {
+		ArkTx         string   `json:"ark_tx"`
+		CheckpointTxs []string `json:"checkpoint_txs,omitempty"`
+	}{
+		ArkTx:         arkTxB64,
+		CheckpointTxs: cpList,
+	}
+
+	reqBody, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal request: %w", err)
+	}
+
+	fmt.Println("Calling POST /v1/tx (insecure) ...")
+	status, body, sigOK, err := ic.post(ctx, "/v1/tx", bytes.NewReader(reqBody))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("\nStatus:             %d\n", status)
+	fmt.Printf("Signature Verified: %v\n", sigOK)
+	fmt.Printf("Raw body:           %s\n", body)
+
+	if status != 200 {
+		return fmt.Errorf("request failed with status %d", status)
+	}
+
+	var result struct {
+		SignedArkTx         string   `json:"signed_ark_tx"`
+		SignedCheckpointTxs []string `json:"signed_checkpoint_txs"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
 		return nil
 	}
 

@@ -62,17 +62,44 @@ services:
         ls -lh /artifacts/
         echo "=== EIF download complete ==="
 
+  # --- KMS Seed Writer ---
+  # Writes the KMS seed file to a shared volume (no host filesystem needed).
+  kms-seed-writer:
+    image: alpine:latest
+    volumes:
+      - kms-seed:/init
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cat > /init/seed.yaml <<'EOF'
+        Keys:
+          Symmetric:
+            Aes:
+              - Metadata:
+                  KeyId: "test-key-id"
+                  Description: "Local development enclave key"
+                  KeyUsage: ENCRYPT_DECRYPT
+                BackingKeys:
+                  - "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        Aliases:
+          - AliasName: alias/test-enclave-key
+            TargetKeyId: "test-key-id"
+        EOF
+        echo "KMS seed written to /init/seed.yaml"
+        cat /init/seed.yaml
+
   # --- Mock AWS Services ---
 
   local-kms:
     image: nsmithuk/local-kms
-    ports:
-      - "8080:8080"
     environment:
       KMS_REGION: us-east-1
       KMS_ACCOUNT_ID: "123456789012"
     volumes:
-      - ./seed.yaml:/init/seed.yaml:ro
+      - kms-seed:/init
+    depends_on:
+      kms-seed-writer:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ || exit 0"]
       interval: 5s
@@ -82,8 +109,6 @@ services:
 
   kms-proxy:
     image: ghcr.io/arklabshq/enclave-kms-proxy:latest
-    ports:
-      - "4000:4000"
     environment:
       UPSTREAM_KMS_URL: "http://local-kms:8080"
       LISTEN_ADDR: ":4000"
@@ -99,8 +124,6 @@ services:
 
   localstack:
     image: localstack/localstack
-    ports:
-      - "4566:4566"
     environment:
       SERVICES: ssm,sts,s3,cloudformation,iam
     healthcheck:
@@ -112,8 +135,6 @@ services:
 
   mock-imds:
     image: ghcr.io/arklabshq/enclave-mock-imds:latest
-    ports:
-      - "1338:1338"
     environment:
       LISTEN_ADDR: ":1338"
     healthcheck:
@@ -125,13 +146,13 @@ services:
 
   # --- QEMU Enclave ---
   # Boots the EIF in QEMU with nitro-enclave emulation.
-  # Requires privileged mode for KVM + vsock access.
+  # Uses KVM if /dev/kvm is available, falls back to TCG (slow) otherwise.
+  # Requires privileged mode for vsock access.
 
   enclave:
     image: ghcr.io/arklabshq/enclave-runner:latest
     privileged: true
     devices:
-      - /dev/kvm:/dev/kvm
       - /dev/vsock:/dev/vsock
     ports:
       - "8443:8443"
@@ -155,3 +176,4 @@ services:
 
 volumes:
   eif-artifacts:
+  kms-seed:
