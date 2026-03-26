@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ArkLabsHQ/introspector/pkg/arkade"
+	"github.com/arkade-os/arkd/pkg/ark-lib/asset"
 	scriptlib "github.com/arkade-os/arkd/pkg/ark-lib/script"
 	"github.com/arkade-os/arkd/pkg/ark-lib/txutils"
 	"github.com/btcsuite/btcd/btcec/v2"
@@ -96,19 +97,32 @@ func readArkadeScript(ptx *psbt.Packet, inputIndex int, signerPublicKey *btcec.P
 }
 
 func (s arkadeScript) execute(spendingTx *wire.MsgTx, prevoutFetcher txscript.PrevOutputFetcher, inputIndex int) error {
+	prevOut := prevoutFetcher.FetchPrevOutput(spendingTx.TxIn[inputIndex].PreviousOutPoint)
+	inputAmount := int64(0)
+	if prevOut != nil {
+		inputAmount = prevOut.Value
+	}
+
 	engine, err := arkade.NewEngine(
 		s.script,
 		spendingTx,
 		inputIndex,
-		txscript.StandardVerifyFlags,
 		txscript.NewSigCache(100),
 		txscript.NewTxSigHashes(spendingTx, prevoutFetcher),
-		0, // TODO : add input amount if need CHECKSIG in custom script?
+		inputAmount,
 		prevoutFetcher,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create engine: %w", err)
 	}
+
+	// Parse asset packet from transaction if present
+	assetPacket, err := asset.NewPacketFromTx(spendingTx)
+	if err == nil {
+		// Asset packet found, set it on the engine for introspection opcodes
+		engine.SetAssetPacket(assetPacket)
+	}
+	// If error, packet is not present - this is okay, just don't set it
 
 	if len(s.witness) > 0 {
 		engine.SetStack(s.witness)

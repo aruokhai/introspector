@@ -1,9 +1,89 @@
 # Introspector
 
+[![test](https://github.com/ArkLabsHQ/introspector/actions/workflows/test.yaml/badge.svg)](https://github.com/ArkLabsHQ/introspector/actions/workflows/test.yaml)
+[![quality](https://github.com/ArkLabsHQ/introspector/actions/workflows/quality.yaml/badge.svg)](https://github.com/ArkLabsHQ/introspector/actions/workflows/quality.yaml)
+[![Trivy Security Scan](https://github.com/ArkLabsHQ/introspector/actions/workflows/trivy.yaml/badge.svg)](https://github.com/ArkLabsHQ/introspector/actions/workflows/trivy.yaml)
+
+_Introspector is a signing service for the [Arkade](https://docs.arkadeos.com/) protocol, executing [Arkade Script](https://docs.arkadeos.com/experimental/arkade-script)._
+
+This is achieved by signing any Ark transaction (offchain or intent proof) expecting the signature of a [tweaked public key](pkg/arkade/tweak.go). The tweaked key is `introspector_key + hash(arkade_script)`, where the script hash is a [tagged hash](pkg/arkade/tweak.go#L15) (`"ArkScriptHash"`). The Arkade script is revealed via custom [PSBT fields](pkg/arkade/psbt_field.go) (`arkadescript`). If the script requires witness arguments, the extra witness is also passed via PSBT fields (`arkadescriptwitness`).
+
+## Example: Pay-to-Two-Outputs
+
+This example builds a VTXO that can only be spent if two specific outputs are created with exact amounts. The introspector enforces these conditions via an Arkade script. See the full test in [`test/pay_2_out_test.go`](test/pay_2_out_test.go).
+
+### 1. Build the Arkade script
+
+The script uses introspection opcodes to verify the transaction outputs match the expected addresses and amounts:
+
+```go
+arkadeScript, _ := txscript.NewScriptBuilder().
+    // output 0 must pay to alice
+    AddInt64(0).AddOp(arkade.OP_INSPECTOUTPUTSCRIPTPUBKEY).
+    AddOp(arkade.OP_1).AddOp(arkade.OP_EQUALVERIFY).       // segwit v1
+    AddData(alicePkScript[2:]).AddOp(arkade.OP_EQUALVERIFY). // witness program
+    // output 0 must have exact amount
+    AddInt64(0).AddOp(arkade.OP_INSPECTOUTPUTVALUE).
+    AddData(uint64LE(aliceAmount)).AddOp(arkade.OP_EQUALVERIFY).
+    // output 1 must pay to bob
+    AddInt64(1).AddOp(arkade.OP_INSPECTOUTPUTSCRIPTPUBKEY).
+    AddOp(arkade.OP_1).AddOp(arkade.OP_EQUALVERIFY).
+    AddData(bobPkScript[2:]).AddOp(arkade.OP_EQUALVERIFY).
+    // output 1 must have exact amount
+    AddInt64(1).AddOp(arkade.OP_INSPECTOUTPUTVALUE).
+    AddData(uint64LE(bobAmount)).AddOp(arkade.OP_EQUAL).
+    Script()
+```
+
+### 2. Compute the tweaked key and build the VTXO tapscript
+
+The VTXO uses a `MultisigClosure` with three keys: the ark server, the user and the introspector's tweaked key.
+
+```go
+scriptHash := arkade.ArkadeScriptHash(arkadeScript)
+tweakedKey := arkade.ComputeArkadeScriptPublicKey(introspectorPubKey, scriptHash)
+
+vtxoScript := script.TapscriptsVtxoScript{
+    Closures: []script.Closure{
+        &script.MultisigClosure{
+            PubKeys: []*btcec.PublicKey{aliceKey, tweakedKey, serverKey},
+        },
+    },
+}
+vtxoTapKey, _, _ := vtxoScript.TapTree()
+```
+
+### 3. Build the PSBT and attach the Arkade script
+
+Build the offchain transaction with outputs matching the script, then attach the Arkade script via the custom PSBT field:
+
+```go
+tx, checkpoints, _ := offchain.BuildTxs(
+    []offchain.VtxoInput{vtxoInput},
+    []*wire.TxOut{
+        {Value: aliceAmount, PkScript: alicePkScript},
+        {Value: bobAmount, PkScript: bobPkScript},
+    },
+    checkpointScript,
+)
+
+// attach the arkade script to input 0
+txutils.SetArkPsbtField(tx, 0, arkade.ArkadeScriptField, arkadeScript)
+```
+
+### 4. Submit to the introspector
+
+The introspector [decodes the tapscript](internal/application/utils.go), verifies it is a `MultisigClosure` containing the expected tweaked key, [executes the Arkade script](internal/application/tx.go) against the transaction, and signs if it passes:
+
+```go
+signedTx, signedCheckpoints, _ := introspectorClient.SubmitTx(ctx, encodedTx, encodedCheckpoints)
+```
+
 ## API
 
 ### GetInfo
-Returns service information including the signer's public key.
+
+Returns service metadata including the signer's public key. The public key should be tweaked with the Arkade script hash before being used in a VTXO tapscript.
 
 **Endpoint**: `GET /v1/info`
 
@@ -11,12 +91,13 @@ Returns service information including the signer's public key.
 ```json
 {
   "version": "0.0.1",
-  "signer_pubkey": "02..."
+  "signer_pubkey": "compressed_public_key"
 }
 ```
 
 ### SubmitTx
-Submits an Ark transaction for signing along with associated checkpoint transactions.
+
+Signs an Ark transaction and its associated checkpoint transactions by executing Arkade scripts on the Ark transaction inputs. The scripts are executed only on the Ark transaction, not on checkpoints.
 
 **Endpoint**: `POST /v1/tx`
 
@@ -37,7 +118,8 @@ Submits an Ark transaction for signing along with associated checkpoint transact
 ```
 
 ### SubmitIntent
-Submits an unsigned intent proof for signing. Executes Arkade scripts on the intent proof and signs it. Must be used before registration of the intent.
+
+Signs an intent proof after validating the register message and executing Arkade scripts on the proof transaction. Must be called before intent registration.
 
 **Endpoint**: `POST /v1/intent`
 
@@ -59,7 +141,8 @@ Submits an unsigned intent proof for signing. Executes Arkade scripts on the int
 ```
 
 ### SubmitFinalization
-Submits a batch finalization request for signing. Signs forfeits and commitment transactions if the intent proof contains the signer's signature. Validates that forfeits are part of the provided connector tree.
+
+Conditionally signs forfeit and/or boarding inputs during batch finalization. Only signs if the signer's signature is found in the intent proof. The connector tree is used to verify the forfeits are part of a real batch session.
 
 **Endpoint**: `POST /v1/finalization`
 
@@ -111,7 +194,7 @@ The service can be configured using environment variables:
 
 ### Prerequisites
 
-- Go 1.25.3+
+- Go 1.25+
 - Docker and Docker Compose
 - Buf CLI (for protocol buffer generation)
 
@@ -135,7 +218,10 @@ make run
 ### Testing
 
 ```bash
-# Run docker infrastructure
+# Run unit tests
+make test
+
+# Run docker regtest environment
 make docker-run
 
 # Run integration tests
@@ -249,3 +335,51 @@ These opcodes allow incremental SHA256 hashing by maintaining hash state on the 
 | OP_SHA256INITIALIZE | 196 | 0xc4 | data | state | Initializes a SHA256 context with the given data and pushes the hash state onto the stack. |
 | OP_SHA256UPDATE | 197 | 0xc5 | data state | newState | Updates a SHA256 context by adding data to the stream being hashed. Pushes the updated state. |
 | OP_SHA256FINALIZE | 198 | 0xc6 | data state | hash | Finalizes a SHA256 hash by adding data and completing padding. Pushes the final 32-byte hash value. |
+
+### Asset Introspection Opcodes
+
+These opcodes provide access to the Arkade Asset V1 packet embedded in the transaction. Asset IDs are represented as two stack items: (txid32, gidx_u16).
+
+#### Packet & Groups
+
+| Word | Opcode | Hex | Input | Output | Description |
+|------|--------|-----|-------|--------|-------------|
+| OP_INSPECTNUMASSETGROUPS | 229 | 0xe5 | Nothing | K | Returns the number of asset groups in the packet. |
+| OP_INSPECTASSETGROUPASSETID | 230 | 0xe6 | k | txid32 gidx_u16 | Returns the Asset ID of group k. Fresh groups use this transaction's ID. |
+| OP_INSPECTASSETGROUPCTRL | 231 | 0xe7 | k | -1 or txid32 gidx_u16 | Returns the control Asset ID if present, else -1. |
+| OP_FINDASSETGROUPBYASSETID | 232 | 0xe8 | txid32 gidx_u16 | -1 or k | Finds group index by Asset ID, or -1 if absent. |
+
+#### Metadata
+
+| Word | Opcode | Hex | Input | Output | Description |
+|------|--------|-----|-------|--------|-------------|
+| OP_INSPECTASSETGROUPMETADATAHASH | 233 | 0xe9 | k | hash32 | Returns the immutable metadata Merkle root (set at genesis). |
+
+#### Per-Group I/O
+
+| Word | Opcode | Hex | Input | Output | Description |
+|------|--------|-----|-------|--------|-------------|
+| OP_INSPECTASSETGROUPNUM | 234 | 0xea | k source_u8 | count_u16 or in_u16 out_u16 | Returns count of inputs/outputs. source: 0=inputs, 1=outputs, 2=both. |
+| OP_INSPECTASSETGROUP | 235 | 0xeb | k j source_u8 | type_u8 [data...] amount_u64 | Returns j-th input/output of group k. source: 0=input, 1=output. |
+| OP_INSPECTASSETGROUPSUM | 236 | 0xec | k source_u8 | sum_u64 or in_u64 out_u64 | Returns sum of amounts with overflow safety. source: 0=inputs, 1=outputs, 2=both. |
+
+**OP_INSPECTASSETGROUP return values by type:**
+- LOCAL input (0x01): `type_u8 input_index_u32 amount_u64`
+- INTENT input (0x02): `type_u8 txid_32 output_index_u32 amount_u64`
+- LOCAL output (0x01): `type_u8 output_index_u32 amount_u64`
+
+#### Cross-Output (Multi-Asset per UTXO)
+
+| Word | Opcode | Hex | Input | Output | Description |
+|------|--------|-----|-------|--------|-------------|
+| OP_INSPECTOUTASSETCOUNT | 237 | 0xed | o | n | Returns number of asset entries assigned to output o. |
+| OP_INSPECTOUTASSETAT | 238 | 0xee | o t | txid32 gidx_u16 amount_u64 | Returns t-th asset at output o. |
+| OP_INSPECTOUTASSETLOOKUP | 239 | 0xef | o txid32 gidx_u16 | amount_u64 or -1 | Returns amount of asset at output o, or -1 if not found. |
+
+#### Cross-Input (Packet-Declared)
+
+| Word | Opcode | Hex | Input | Output | Description |
+|------|--------|-----|-------|--------|-------------|
+| OP_INSPECTINASSETCOUNT | 240 | 0xf0 | i | n | Returns number of assets declared for input i. |
+| OP_INSPECTINASSETAT | 241 | 0xf1 | i t | txid32 gidx_u16 amount_u64 | Returns t-th asset declared for input i. |
+| OP_INSPECTINASSETLOOKUP | 242 | 0xf2 | i txid32 gidx_u16 | amount_u64 or -1 | Returns declared amount for asset at input i, or -1 if not found. |
