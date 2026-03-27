@@ -26,9 +26,9 @@ app:
   # Secrets are passed as environment variables. No SDK imports needed.
   nix_owner: "aruokhai"                  # GitHub owner (required)
   nix_repo: "introspector"                   # GitHub repo name (required)
-  nix_rev: "307ff74550e1bd7034a990e39228daecf953bb54"                    # Git commit SHA (required)
-  nix_hash: "sha256-xU9Wgzmwm6uwoSY67BFoojKFWjLbap3ySj3E++1NljQ="                   # Nix source hash: nix-prefetch-url --unpack (required)
-  nix_vendor_hash: "sha256-w7Ih56HsQ9ZIlDqoyH3QHNyyGkS7VGrdP6FrE65V+jg="            # Go vendor hash (required)
+  nix_rev: "48d75ae9e8990afb23c39ae10bd3dc21b4012e44"                    # Git commit SHA (required)
+  nix_hash: "sha256-6N7od4EPYro6VaECzfQ4mk5dMwRrsVFIq3VNb80LuTQ="                   # Nix source hash: nix-prefetch-url --unpack (required)
+  nix_vendor_hash: "sha256-caKjrSh9+tJpicDXL7urhO5NJNgLnbRq0LVOsSLFV6M="            # Go vendor hash (required)
   nix_sub_packages:              # Go sub-packages to build
     - "cmd"
   binary_name: introspector                # Output binary name (defaults to 'name')
